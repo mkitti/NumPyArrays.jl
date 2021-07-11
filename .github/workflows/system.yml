@@ -3,7 +3,7 @@ name: Test with system Python
 on:
   push:
     branches:
-      - master
+      - main
     tags: '*'
   pull_request:
   workflow_dispatch:
