@@ -65,13 +65,13 @@ using Test
         nprA = NumPyArray(rA) 
         io = IOBuffer()
         @test pytypeof(nprA) == np.ndarray
-        @test show(io, nprA) |> isnothing
+        @test show(io, nprA)  === nothing
         @test String(take!(io)) == "UInt8[0x00 0x00 0x00 0x00; 0x00 0x00 0x00 0x00; 0x00 0x00 0x00 0x00; 0x00 0x00 0x00 0x00]"
 
         sA = @view collect(1:16)[5:9]
         npsA = NumPyArray(sA)
         @test pytypeof(npsA) == np.ndarray
-        @test show(io, npsA) |> isnothing
+        @test show(io, npsA)  === nothing
         @test String(take!(io)) == "[5, 6, 7, 8, 9]"
         println()
 
