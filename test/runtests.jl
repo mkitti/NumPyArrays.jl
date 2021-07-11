@@ -78,5 +78,11 @@ using Test
         # Test roundtrip
         @test nprA == NumPyArray(nprA)
         @test npsA == NumPyArray(npsA)
+
+        # Test operations
+        @test sum(nprA) == np.sum(nprA)
+        @test sum(npsA) == np.sum(npsA)
+        @test length(nprA) == np.size(nprA)
+        @test length(npsA) == np.size(npsA)
     end
 end
