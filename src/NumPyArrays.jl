@@ -153,7 +153,7 @@ Base.stride(a::NumPyArray{T}) where T = stride(PyArray(a))
 Base.pointer(a::NumPyArray, args...) = pointer(PyArray(a), args...)
 Base.unsafe_convert(t::Type{Ptr{T}}, a::NumPyArray{T}) where T = Base.unsafe_convert(t, PyArray(a))
 
-Base.similar(a::NumPyArray, args...) = Base.similar(PyArray(a), args...)
+Base.similar(a::NumPyArray, ::Type{T}, dims::Dims) where {T} = similar(PyArray(a), T, dims)
 
 # Aliasing some PyCall functions. Conversion to PyObject or PyArray is recommended
 pytypeof(a::NumPyArray) = pytypeof(PyObject(PyArray(a)))
