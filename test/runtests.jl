@@ -63,13 +63,16 @@ using Test
         # Test display
         rA = reinterpret(UInt8, zeros(Int8, 4, 4))
         nprA = NumPyArray(rA) 
+        io = IOBuffer()
         @test pytypeof(nprA) == np.ndarray
-        @test show(nprA) |> isnothing
+        @test show(io, nprA) |> isnothing
+        @test String(take!(io)) == "UInt8[0x00 0x00 0x00 0x00; 0x00 0x00 0x00 0x00; 0x00 0x00 0x00 0x00; 0x00 0x00 0x00 0x00]"
 
         sA = @view collect(1:16)[5:9]
         npsA = NumPyArray(sA)
         @test pytypeof(npsA) == np.ndarray
-        @test show(npsA) |> isnothing
+        @test show(io, npsA) |> isnothing
+        @test String(take!(io)) == "[5, 6, 7, 8, 9]"
         println()
 
         # Test roundtrip
