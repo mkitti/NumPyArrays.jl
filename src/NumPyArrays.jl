@@ -27,6 +27,12 @@ PyObject <class 'numpy.ndarray'>
 """
 module NumPyArrays
 
+@static if isdefined(Base, :Experimental) &&
+           isdefined(Base.Experimental, Symbol("@optlevel"))
+    Base.Experimental.@optlevel 1
+end
+
+
 export NumPyArray, pytypeof
 
 # Imports for _NumPyArray
@@ -37,23 +43,19 @@ import PyCall: PyObject, PyPtr
 # General imports
 import PyCall: pyimport, pytype_query, pytypeof, PyArray
 
-const np = pyimport("numpy")
-
-abstract type AbstractImmutableStridedArraysWithParent{T <: PYARR_TYPES} end
 """
-    KnownImmutableStridedArraysWithParent{T} where T <: PyCall.PYARR_TYPES
+    KnownImmutableArraysWithParent{T} where T <: PyCall.PYARR_TYPES
 
 Immutable `AbstractArray`s in `Base` that have a non-immutable parent that can be embedded in the PyCall GC
 """
-const KnownImmutableStridedArraysWithParent{T} = Union{SubArray{T}, Base.ReinterpretArray{T}, Base.ReshapedArray{T}, Base.PermutedDimsArray{T}} where T <: PYARR_TYPES
+const KnownImmutableArraysWithParent{T} = Union{SubArray{T}, Base.ReinterpretArray{T}, Base.ReshapedArray{T}, Base.PermutedDimsArray{T}} where T
 
-abstract type AbstractStridedArray{T <: PYARR_TYPES} end
 """
     KnownStridedArrays{T} where T <: PyCall.PYARR_TYPES
 
 `AbstractArray`s in `Base` where the method `strides` is applicable
 """
-const KnownStridedArrays{T} = Union{StridedArray{T}, KnownImmutableStridedArraysWithParent{T}} where T <: PYARR_TYPES
+const KnownStridedArrays{T} = StridedArray{T} where T
 
 """
     NumPyArray{T,N}(po::PyObject)
@@ -83,7 +85,7 @@ function NumPyArray(a::KnownStridedArrays{T}, revdims::Bool) where T <: PYARR_TY
     _NumPyArray(a, revdims)
 end
 function NumPyArray(a::AbstractArray{T}, revdims::Bool) where T <: PYARR_TYPES
-    # For a general AbstractArray, we do not know 
+    # For a general AbstractArray, we do not know if strides applies
     if applicable(strides, a)
         _NumPyArray(a, revdims)
     else
@@ -130,13 +132,13 @@ function numpyembed(a::NumPyArray{T,N}, jo::Any) where {T,N}
         if applicable(parent, jo)
             return NumPyArray{T,N}(pyembed(PyObject(a), parent(jo)))
         else
-            throw(ArgumentError("numpyembed: immutable argument whihtout a parent is not allowed"))
+            throw(ArgumentError("numpyembed: immutable argument without a parent is not allowed"))
         end
     else
         return NumPyArray{T,N}(pyembed(PyObject(a), jo))
     end
 end
-numpyembed(a::NumPyArray, jo::KnownImmutableStridedArraysWithParent) = numpyembed(a, jo.parent)
+numpyembed(a::NumPyArray, jo::KnownImmutableArraysWithParent) = numpyembed(a, jo.parent)
 
 # AbstractArray interface, provided as a convenience. Conversion to PyArray is recommended
 Base.size(a::NumPyArray) = a.po.shape
@@ -147,10 +149,13 @@ Base.getindex(a::NumPyArray{T}, i::CartesianIndex) where T = convert(T, get(a.po
 Base.setindex!(a::NumPyArray{T}, v, i) where T = a.po.put(i, v)
 Base.setindex!(a::NumPyArray{T, N}, v, I::Vararg{Int, N}) where {T,N} = a.po.put(i,v)
 Base.axes(a::NumPyArray) = map(d -> 0:d-1, size(a))
-Base.strides(a::NumPyArray) = a.po.strides
+Base.strides(a::NumPyArray{T}) where T = a.po.strides .÷ sizeof(T)
+
+Base.pointer(a::NumPyArray) = pointer(PyArray(a))
+Base.unsafe_convert(::Type{Ptr{T}}, a::NumPyArray{T}) where T = pointer(a)
 
 # Julia tends to add extra 1s to the index during display
-function Base.getindex(a::NumPyArray{T}, args...) where T
+function Base.getindex(a::NumPyArray{T}, args::Number...) where T
     nd = ndims(a)
     if nd < length(args) && all(args[nd+1:end] .== 1)
         # If there are trailing ones, truncate
