@@ -10,10 +10,10 @@ using Test
         C = NumPyArray(B)
         D = PyArray(C)
         @test pytypeof(C) == np.ndarray
-        @test collect(C) == B
+        @test C == B
         @test D == B
         B[1] = 3
-        @test collect(C) == B && C[0] == B[1]
+        @test C == B && C[1] == B[1]
         @test D == B && D[1] == B[1]
 
         # SubArray
@@ -21,10 +21,10 @@ using Test
         C = NumPyArray(B)
         D = PyArray(C)
         @test pytypeof(C) == np.ndarray
-        @test collect(C) == B
+        @test C == B
         @test D == B
         A[3] = 5
-        @test collect(C) == B && C[0] == A[3]
+        @test C == B && C[1] == A[3]
         @test D == B && D[1] == A[3]
 
         # ReshapedArray
@@ -32,10 +32,10 @@ using Test
         C = NumPyArray(B)
         D = PyArray(C)
         @test pytypeof(C) == np.ndarray
-        @test collect(C) == B
+        @test C == B
         @test D == B
         A[2] = 6
-        @test collect(C) == B && C[1] == A[2]
+        @test C == B && C[2] == A[2]
         @test D == B && D[2] == A[2]
 
         # PermutedDimsArray
@@ -43,10 +43,10 @@ using Test
         C = NumPyArray(B)
         D = PyArray(C)
         @test pytypeof(C) == np.ndarray
-        @test collect(C) == B
+        @test C == B
         @test D == B
         A[1] == 7
-        @test collect(C) == B && C[0] == A[1]
+        @test C == B && C[1] == A[1]
         @test D == B && D[1] == A[1]
 
         # ReinterpretArray
@@ -54,10 +54,10 @@ using Test
         C = NumPyArray(B)
         D = PyArray(C)
         @test pytypeof(C) == np.ndarray
-        @test collect(C) == B
+        @test C == B
         @test D == B
         A[1] = 12
-        @test collect(C) == B && C[0] == reinterpret(UInt64, A[1])
+        @test C == B && C[1] == reinterpret(UInt64, A[1])
         @test D == B && D[1] == reinterpret(UInt64, A[1])
 
         # Test display
@@ -69,7 +69,7 @@ using Test
         sA = @view collect(1:16)[5:9]
         npsA = NumPyArray(sA)
         @test pytypeof(npsA) == np.ndarray
-        @test_broken show(npsA) |> isnothing
+        @test show(npsA) |> isnothing
         println()
 
         # Test roundtrip

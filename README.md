@@ -21,7 +21,7 @@ julia> pytypeof(NumPyArray(rA))
 PyObject <class 'numpy.ndarray'>
 
 julia> NumPyArray(rA)
-4×4 NumPyArray{UInt8,2} with indices 0:3×0:3:
+4×4 NumPyArray{UInt8,2}:
  0x00  0x00  0x00  0x00
  0x00  0x00  0x00  0x00
  0x00  0x00  0x00  0x00
@@ -65,7 +65,7 @@ even if their element type is compatible with NumPy.
 
 NumPyArrays.jl extends PyCall.jl to allow any array with a compatible
 element type where the method `strides` is applicable and who has a
-parent or ancestor that is not mutable.
+parent or ancestor that is mutable.
 
 ## Why not add this functionality to PyCall.jl?
 
@@ -76,9 +76,7 @@ As of the creation of this package on July 10th, 2021, the pull request was last
 ## What are some other features of NumPyArrays.jl?
 
 NumPyArrays.jl also provides a lightweight [`AbstractArray` interface](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array)
-and extends some functions of PyCall to apply to a `NumPyArray`. Much of this is redundant with the functionality of `PyCall.PyArray`.
-
-One differentiating factor is the indexing into a `NumPyArray` is 0-based.
+and extends some functions of PyCall to apply to a `NumPyArray`. Much of this is redundant with the functionality of `PyCall.PyArray`, which this wraps.
 
 For advanced usage with PyCall, it is recommended to convert the `NumPyArray` to a `PyObject` or `PyArray`.
 

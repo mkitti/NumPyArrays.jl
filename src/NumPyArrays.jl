@@ -27,6 +27,8 @@ PyObject <class 'numpy.ndarray'>
 """
 module NumPyArrays
 
+# Portions of this code are derived directly from PyCall.jl
+
 @static if isdefined(Base, :Experimental) &&
            isdefined(Base.Experimental, Symbol("@optlevel"))
     Base.Experimental.@optlevel 1
@@ -60,18 +62,20 @@ const KnownStridedArrays{T} = StridedArray{T} where T
 """
     NumPyArray{T,N}(po::PyObject)
 
-NumPyArray is a wrapper around a PyCall.PyObject. It is an AbstractArray.
+NumPyArray is a wrapper around a PyCall.PyArray. It is an AbstractArray.
 The main purpose of a NumPyArray is so to provide a constructor to generalize
 the conversion of Julia arrays into NumPyArrays. `T` is the element type of the array.
-`N` is the number of dimensions. The array will be 0-indexed.
+`N` is the number of dimensions.
 
 For other uses, such as wrapping an existing array from NumPy, use `PyCall.PyArray`.
 
 Use `PyObject` and `PyArray` methods to convert `NumPyArray` into those types.
 """
 mutable struct NumPyArray{T,N} <: AbstractArray{T,N}
-    po::PyObject
+    pa::PyArray{T,N}
 end
+NumPyArray{T,N}(po::PyObject) where {T,N} = NumPyArray{T,N}(PyArray(po))
+NumPyArray(po::PyObject) = NumPyArray(PyArray(po))
 
 """
     NumPyArray(a::AbstractArray, [revdims::Bool])
@@ -91,10 +95,6 @@ function NumPyArray(a::AbstractArray{T}, revdims::Bool) where T <: PYARR_TYPES
     else
         error("Only AbstractArrays where strides is applicable can be converted to NumPyArrays.")
     end
-end
-function NumPyArray(po::PyObject)
-    # See also PyArray_Info
-    NumPyArray{eltype(pytype_query(po)), po.ndim}(po)
 end
 NumPyArray(o::PyPtr) = NumPyArray(PyObject(o))
 
@@ -116,15 +116,15 @@ end
 # Make a NumPyArray that embeds a reference to keep, to prevent Julia
 # from garbage-collecting keep until o is finalized.
 # See also PyObject(o::PyPtr, keep::Any) from which this is derived
-NumPyArray{T,N}(o::PyPtr, keep::Any) where {T,N} = numpyembed(NumPyArray{T,N}(o), keep)
+NumPyArray{T,N}(o::PyPtr, keep::Any) where {T,N} = numpyembed(NumPyArray{T,N}(PyObject(o)), keep)
 
 # PyCall already has convert(::Type{PyObject}, o) = PyObject(o)
 #Base.convert(::Type{PyObject}, a::NumPyArray) = a.po
-PyObject(a::NumPyArray) = a.po
+PyObject(a::NumPyArray) = PyObject(PyArray(a))
 Base.convert(::Type{PyArray}, a::NumPyArray) = PyArray(a)
-PyArray(a::NumPyArray) = PyArray(a.po)
-Base.convert(::Type{Array}, a::NumPyArray{T}) where T = convert(Array{T}, a.po)
-Base.convert(T::Type{<:Array}, a::NumPyArray) = convert(T, a.po)
+PyArray(a::NumPyArray) = a.pa
+Base.convert(::Type{Array}, a::NumPyArray{T}) where T = convert(Array{T}, PyArray(a))
+Base.convert(T::Type{<:Array}, a::NumPyArray) = convert(T, PyArray(a))
 
 # See PyCall.pyembed(po::PyObject, jo::Any)
 function numpyembed(a::NumPyArray{T,N}, jo::Any) where {T,N}
@@ -141,31 +141,21 @@ end
 numpyembed(a::NumPyArray, jo::KnownImmutableArraysWithParent) = numpyembed(a, jo.parent)
 
 # AbstractArray interface, provided as a convenience. Conversion to PyArray is recommended
-Base.size(a::NumPyArray) = a.po.shape
-Base.length(a::NumPyArray) = a.po.size
-Base.getindex(a::NumPyArray{T}, i::Number) where T = convert(T, a.po.take(i))
-Base.getindex(a::NumPyArray{T}, i::CartesianIndex) where T = convert(T, get(a.po, Tuple(i)))
-#Base.getindex(a::NumPyArray{T}, args...) where T = convert(T, get(a.po, args))
-Base.setindex!(a::NumPyArray{T}, v, i) where T = a.po.put(i, v)
-Base.setindex!(a::NumPyArray{T, N}, v, I::Vararg{Int, N}) where {T,N} = a.po.put(i,v)
-Base.axes(a::NumPyArray) = map(d -> 0:d-1, size(a))
-Base.strides(a::NumPyArray{T}) where T = a.po.strides .÷ sizeof(T)
+Base.size(a::NumPyArray) = size(PyArray(a))
+Base.length(a::NumPyArray) = length(PyArray(a))
+Base.getindex(a::NumPyArray, args...) = getindex(PyArray(a), args...)
+Base.setindex!(a::NumPyArray, args...) = setindex(PyArray(a), args...)
+Base.axes(a::NumPyArray) = axes(PyArray(a))
+# Strides should be added to PyArray
+Base.strides(a::NumPyArray{T}) where T = PyArray(a).st
+Base.stride(a::NumPyArray{T}) where T = stride(PyArray(a))
 
-Base.pointer(a::NumPyArray) = pointer(PyArray(a))
-Base.unsafe_convert(::Type{Ptr{T}}, a::NumPyArray{T}) where T = pointer(a)
+Base.pointer(a::NumPyArray, args...) = pointer(PyArray(a), args...)
+Base.unsafe_convert(t::Type{Ptr{T}}, a::NumPyArray{T}) where T = Base.unsafe_convert(t, PyArray(a))
 
-# Julia tends to add extra 1s to the index during display
-function Base.getindex(a::NumPyArray{T}, args::Number...) where T
-    nd = ndims(a)
-    if nd < length(args) && all(args[nd+1:end] .== 1)
-        # If there are trailing ones, truncate
-        convert(T, get(a.po, args[1:nd]))
-    else
-        convert(T, get(a.po, args))
-    end
-end
+Base.similar(a::NumPyArray, args...) = Base.similar(PyArray(a), args...)
 
 # Aliasing some PyCall functions. Conversion to PyObject or PyArray is recommended
-pytypeof(a::NumPyArray) = pytypeof(a.po)
+pytypeof(a::NumPyArray) = pytypeof(PyObject(PyArray(a)))
 
 end # module NumPyArrays
