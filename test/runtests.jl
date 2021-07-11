@@ -15,6 +15,9 @@ using Test
         B[1] = 3
         @test C == B && C[1] == B[1]
         @test D == B && D[1] == B[1]
+        C[1] += 1
+        @test C == B && C[1] == B[1]
+        @test D == B && D[1] == B[1]
 
         # SubArray
         B = view(A, 1:2, 2:2)
@@ -26,6 +29,10 @@ using Test
         A[3] = 5
         @test C == B && C[1] == A[3]
         @test D == B && D[1] == A[3]
+        C[1] += 1
+        @test C == B && C[1] == B[1]
+        @test D == B && D[1] == B[1]
+
 
         # ReshapedArray
         B = Base.ReshapedArray( A, (1,4), () )
@@ -37,6 +44,10 @@ using Test
         A[2] = 6
         @test C == B && C[2] == A[2]
         @test D == B && D[2] == A[2]
+        C[1] += 1
+        @test C == B && C[1] == B[1]
+        @test D == B && D[1] == B[1]
+
 
         # PermutedDimsArray
         B = PermutedDimsArray(A, (2,1) )
@@ -48,6 +59,10 @@ using Test
         A[1] == 7
         @test C == B && C[1] == A[1]
         @test D == B && D[1] == A[1]
+        C[1] += 1
+        @test C == B && C[1] == B[1]
+        @test D == B && D[1] == B[1]
+
 
         # ReinterpretArray
         B = reinterpret(UInt64, A)
@@ -59,6 +74,10 @@ using Test
         A[1] = 12
         @test C == B && C[1] == reinterpret(UInt64, A[1])
         @test D == B && D[1] == reinterpret(UInt64, A[1])
+        C[1] += 1
+        @test C == B && C[1] == B[1]
+        @test D == B && D[1] == B[1]
+
 
         # Test display
         rA = reinterpret(UInt8, zeros(Int8, 4, 4))

@@ -144,7 +144,7 @@ numpyembed(a::NumPyArray, jo::KnownImmutableArraysWithParent) = numpyembed(a, jo
 Base.size(a::NumPyArray) = size(PyArray(a))
 Base.length(a::NumPyArray) = length(PyArray(a))
 Base.getindex(a::NumPyArray, args...) = getindex(PyArray(a), args...)
-Base.setindex!(a::NumPyArray, args...) = setindex(PyArray(a), args...)
+Base.setindex!(a::NumPyArray, args...) = setindex!(PyArray(a), args...)
 Base.axes(a::NumPyArray) = axes(PyArray(a))
 # Strides should be added to PyArray
 Base.strides(a::NumPyArray{T}) where T = PyArray(a).st

@@ -1,7 +1,7 @@
 name = "NumPyArrays"
 uuid = "359eecd2-3036-4797-89e9-498f868f96c0"
 authors = ["Mark Kittisopikul <kittisopikulm@janelia.hhmi.org> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
