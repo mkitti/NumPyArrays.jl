@@ -94,6 +94,33 @@ julia> np = pyimport("numpy"); np.sum(npsA)
 35
 ```
 
+## Installation
+
+This package is being registered in Julia's general registry: https://github.com/JuliaRegistries/General/pull/40675 .
+When that pull request is merged, released versions of this package can be added using `Pkg.jl` via:
+```julia
+] add NumPyArrays
+```
+Alternatively, you can use `using Pkg; Pkg.add("NumPyArrays")`.
+
+### Obtaining the latest version of this package
+
+To obtain tha latest of this package, including versions which may yet to be released,
+use the following command:
+
+```julia
+] add https://github.com/mkitti/NumPyArrays.jl
+```
+Alternatively, you can use `using Pkg; Pkg.add(url="https://github.com/mkitti/NumPyArrays.jl")`.
+*Note: Only released versions are intended to be stable*
+
+If you wish to help develop this package, do one the following:
+
+```julia
+] dev https://github.com/mkitti/NumPyArrays.jl
+] dev NumPyArrays
+```
+
 ## Questions
 
 ### Why not add this functionality to PyCall.jl?
