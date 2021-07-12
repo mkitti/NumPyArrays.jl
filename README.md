@@ -13,8 +13,8 @@ For advanced usage with PyCall, it is recommended to convert the `NumPyArray` to
 
 PyCall.jl already converts a Julia `Array` into a NumPy array.
 However, PyCall converts a `SubArray`, `Base.ReinterpretArray`,
-`Base.PermutedDimsArray`, and `Base.PermutedDimsArray` into a `list`
-even if their element type is compatible with NumPy.
+and `PermutedDimsArray` into a `list` even if their element
+type is compatible with NumPy.
 
 NumPyArrays.jl extends PyCall.jl to allow any array with a compatible
 element type where the method `strides` is applicable and who has a
